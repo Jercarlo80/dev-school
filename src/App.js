@@ -1,14 +1,69 @@
 import React, { Component } from 'react';
-
 import './App.css';
+import axios
+ from 'axios';
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      members: [{}, {}, {}, {}]
+      members: [],
+      id_member: "",
+      first_name: "",
+      last_name: "",
+      buttonDisabled: false
     };
   }
+
+  componentDidMount() {
+    axios.get('https://reqres.in/api/users?page=1')
+      .then(response => {
+        this.setState({ members: response.data.data })
+      })
+      .catch(error => {
+        console.log(error);
+      })
+  }
+
+  inputOnChangehandler = event => {
+    this.setState(
+      {
+        [event.target.name]: event.target.value
+      }
+      );
+  };
+
+  onSubmitHandler = event => {
+    console.log("Your response already sent to our server")
+    event.preventDefault();
+    this.setState({ buttonDisabled: true });
+
+    // Backend Server
+    var payLoad = {
+      id_member: this.id_member,
+      first_name: this.first_name,
+      last_name: this.last_name
+    };
+
+    var url = "https://reqres.in/api/users";
+    axios.post(url, payLoad)
+      .then(response => {
+        console.log(response);
+        var members = [...this.state.members]
+        members.push(response.data)
+        this.setState(
+          { 
+            members, 
+            buttonDisabled: false,
+            id_member: "",
+            first_name: "",
+            last_name: "" 
+          })
+      })
+      .catch(error => {
+        console.log(error);
+      })
+  };
 
   render() {
     return (
@@ -20,17 +75,17 @@ class App extends Component {
             <h2>Member</h2>
             <div className='row'>
             {this.state.members.map((member, index) => 
-              <div className='col-md-6'>
+              <div className='col-md-6' key={member.id}>
               <div className='card' style={{margin: 10}}>
                 <div className='card-body'>
                   <h5 className='card-title'>
-                    ID MEMBER: 
+                    ID MEMBER: {member.id}
                   </h5>
                   <h5 className='card-title'>
-                    FIRST NAME: 
+                    FIRST NAME: {member.first_name}
                   </h5>
                   <h5 className='card-title'>
-                    LAST NAME:  
+                    LAST NAME:  {member.last_name}
                   </h5>
                   <button className='btn btn-primary'>EDIT</button>
                   <button className='btn btn-danger'>DELETE</button>
@@ -43,18 +98,40 @@ class App extends Component {
           <div className='col-md-6' style={{border: '1px solid black'}}>
 
             <h2>Form</h2>
-            <form>
+            <form onSubmit={this.onSubmitHandler}>
               <div className='form-group'>
                 <label>ID MEMBER: </label>
-                <input type='text' className='form-control'/> 
+                <input 
+                type='text' className='form-control' 
+                name='id_member' 
+                value={this.state.id_member}
+                onChange={this.inputOnChangehandler}
+                /> 
                 <label>FIRST NAME: </label>
-                <input type='text' className='form-control'/> 
+                <input 
+                type='text' 
+                className='form-control' 
+                name='first_name'  
+                value={this.state.first_name}
+                onChange={this.inputOnChangehandler}
+                /> 
                 <label>LAST NAME: </label>
-                <input type='text' className='form-control'/> 
-                <button type='SUBMIT' className='btn btn-primary'>SUBMIT</button>
+                <input 
+                type='text' 
+                className='form-control' 
+                name='last_name' 
+                value={this.state.last_name}
+                onChange={this.inputOnChangehandler}
+                /> 
+                <button 
+                type='SUBMIT' 
+                className='btn btn-primary'
+                disabled={this.state.buttonDisabled} // menonaktifkan button kita user sudah melakukan klik.
+                >
+                SUBMIT
+                </button>
               </div>
             </form>
-
           </div>
         </div>
       </div>
