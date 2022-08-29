@@ -11,7 +11,9 @@ class App extends Component {
       id_member: "",
       first_name: "",
       last_name: "",
-      buttonDisabled: false
+      buttonDisabled: false,
+      formStatus: "CREATE",
+      memberIdSelected: null
     };
   }
 
@@ -40,12 +42,22 @@ class App extends Component {
 
     // Backend Server
     var payLoad = {
-      id_member: this.id_member,
+      id_member: this.id,
       first_name: this.first_name,
       last_name: this.last_name
     };
 
-    var url = "https://reqres.in/api/users";
+    var url = "";
+    if (this.state.formStatus === "create") {
+      url = "https://reqres.in/api/users";
+      this.addMember(url, payLoad);
+    } else {
+      url = 'https://reqres.in/api/users/${this.state.memberIdSelected}';
+      this.editMember(url, payLoad);
+    }
+  };
+
+  addMember = (url, payLoad) => {
     axios.post(url, payLoad)
       .then(response => {
         console.log(response);
@@ -62,8 +74,45 @@ class App extends Component {
       })
       .catch(error => {
         console.log(error);
-      })
+      });
   };
+
+  editMember = (url, payLoad) => {
+    axios.put(url, payLoad)
+      .then(response => {
+        var members = [...this.state.members]
+        var indexmember = members.findIndex(
+          member => member.id === this.state.memberIdSelected
+          )
+
+        members[indexmember].id = response.data.id;
+        members[indexmember].first_name = response.data.first_name;
+        members[indexmember].last_name = response.data.last_name;
+        
+        this.setState(
+          {
+          members,
+          buttonDisabled: false,
+          id: "",
+          first_name: "",
+          last_name: "",
+          formStatus: "create"
+        })
+      }).catch(error => {
+        console.log(error);
+      });
+  }
+
+  editButtonHandler = member => {
+    this.setState(
+      {
+      id_member: member.id,
+      first_name: member.first_name,
+      last_name: member.last_name,
+      formStatus: "EDIT",
+      memberIdSelected: member.id_member
+      })
+  }
 
   render() {
     return (
@@ -72,7 +121,7 @@ class App extends Component {
         <div className='row'>
           <div className='col-md-6' style={{border: '1px solid black'}}>
 
-            <h2>Member</h2>
+            <h2>MEMBER</h2>
             <div className='row'>
             {this.state.members.map((member, index) => 
               <div className='col-md-6' key={member.id}>
@@ -87,7 +136,7 @@ class App extends Component {
                   <h5 className='card-title'>
                     LAST NAME:  {member.last_name}
                   </h5>
-                  <button className='btn btn-primary'>EDIT</button>
+                  <button className='btn btn-primary' onClick={() => this.editButtonHandler(member)}>EDIT</button>
                   <button className='btn btn-danger'>DELETE</button>
                 </div>
               </div>
@@ -97,16 +146,16 @@ class App extends Component {
           </div>
           <div className='col-md-6' style={{border: '1px solid black'}}>
 
-            <h2>Form</h2>
+            <h2>FORM {this.state.formStatus}</h2>
             <form onSubmit={this.onSubmitHandler}>
               <div className='form-group'>
-                <label>ID MEMBER: </label>
+                {/* <label>ID MEMBER: </label>
                 <input 
                 type='text' className='form-control' 
                 name='id_member' 
                 value={this.state.id_member}
                 onChange={this.inputOnChangehandler}
-                /> 
+                />  */}
                 <label>FIRST NAME: </label>
                 <input 
                 type='text' 
